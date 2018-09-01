@@ -38,9 +38,9 @@ cp .envrc.sample .envrc
 direnv allow
 
 # ビルド
-make build
+make build (ymlからgoファイルを生成
 
-make init
+make init (生成されたgoファイルの依存関係取り込み
 
 make build
 
