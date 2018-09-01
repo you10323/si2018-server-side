@@ -40,6 +40,10 @@ direnv allow
 # ビルド
 make build
 
+make init
+
+make build
+
 # DBの初期化 & マイグレ
 make setup-db
 
