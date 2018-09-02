@@ -1,9 +1,10 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/eure/si2018-server-side/entities"
 	"github.com/go-openapi/strfmt"
-	"time"
 )
 
 type UserImageRepository struct{}

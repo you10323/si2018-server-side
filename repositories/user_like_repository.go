@@ -1,12 +1,6 @@
 package repositories
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/eure/si2018-server-side/entities"
-	"github.com/go-xorm/builder"
-)
+import "github.com/eure/si2018-server-side/entities"
 
 type UserLikeRepository struct{}
 
@@ -23,63 +17,7 @@ func (r *UserLikeRepository) Create(ent entities.UserLike) error {
 	return nil
 }
 
-func (r *UserLikeRepository) Get(userID, partnerID int64) (*entities.UserLike, error) {
-	var like entities.UserLike
-	var ids = []int64{userID, partnerID}
-	s := engine.NewSession()
-	defer func() { log.Println(s.LastSQL()) }()
-	has, err := s.Where(builder.In("user_id", ids).And(builder.In("partner_id", ids))).Get(&like)
-	if err != nil {
-		return nil, err
-	}
-	if has {
-		return &like, nil
-	}
-	return nil, nil
-}
-
-func (r *UserLikeRepository) GetLikeByUserID(meID, partnerID int64) (*entities.UserLike, error) {
-	var like entities.UserLike
-
-	_, err := engine.Where("user_id = ?", partnerID).And("partner_id = ?", meID).Get(&like)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	return &like, nil
-}
-
-func (r *UserLikeRepository) FindGotLikeWithLimitOffset(userID int64, limit, offset int, matchIDs []int64) ([]entities.UserLike, error) {
-	var likes []entities.UserLike
-
-	s := engine.NewSession()
-	s.Where("partner_id = ?", userID)
-	if len(matchIDs) > 0 {
-		s.NotIn("user_id", matchIDs)
-	}
-	s.Limit(limit, offset)
-	s.Desc("created_at")
-	err := s.Find(&likes)
-	if err != nil {
-		return likes, err
-	}
-
-	return likes, nil
-}
-
-func (r *UserLikeRepository) FindSendLikeWithLimitOffset(userID int64, limit, offset int) ([]entities.UserLike, error) {
-	var likes []entities.UserLike
-
-	err := engine.Where("user_id = ?", userID).Limit(limit, offset).Desc("created_at").Find(&likes)
-	if err != nil {
-		return likes, err
-	}
-
-	return likes, nil
-}
-
-// Likeした・された全てのUserIDを返す
+// 自分が既にLikeしている/されている状態の全てのUserのIDを返す.
 func (r *UserLikeRepository) FindLikeAll(userID int64) ([]int64, error) {
 	var likes []entities.UserLike
 	var ids []int64
@@ -98,4 +36,38 @@ func (r *UserLikeRepository) FindLikeAll(userID int64) ([]int64, error) {
 	}
 
 	return ids, nil
+}
+
+// いいねを1件取得する.
+// userIDはいいねを送った人, partnerIDはいいねを受け取った人.
+func (r *UserLikeRepository) GetLikeBySenderIDReceiverID(userID, partnerID int64) (*entities.UserLike, error) {
+	var ent entities.UserLike
+
+	has, err := engine.Where("user_id = ?", userID).And("partner_id = ?", partnerID).Get(&ent)
+	if err != nil {
+		return nil, err
+	}
+	if has {
+		return &ent, nil
+	}
+	return nil, nil
+}
+
+// マッチ済みのお相手を除き、もらったいいねを、limit/offsetで取得する.
+func (r *UserLikeRepository) FindGotLikeWithLimitOffset(userID int64, limit, offset int, matchIDs []int64) ([]entities.UserLike, error) {
+	var likes []entities.UserLike
+
+	s := engine.NewSession()
+	s.Where("partner_id = ?", userID)
+	if len(matchIDs) > 0 {
+		s.NotIn("user_id", matchIDs)
+	}
+	s.Limit(limit, offset)
+	s.Desc("created_at")
+	err := s.Find(&likes)
+	if err != nil {
+		return likes, err
+	}
+
+	return likes, nil
 }

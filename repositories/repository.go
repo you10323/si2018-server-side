@@ -21,11 +21,11 @@ func init() {
 	var password string
 	var port string
 
-	hostname = os.Getenv("LOCAL_DB_HOSTNAME")
-	dbname = os.Getenv("LOCAL_DB_DBNAME")
-	username = os.Getenv("LOCAL_DB_USERNAME")
-	password = os.Getenv("LOCAL_DB_PASSWORD")
-	port = os.Getenv("LOCAL_DB_PORT")
+	hostname = os.Getenv("DB_HOSTNAME")
+	dbname = os.Getenv("DB_DBNAME")
+	username = os.Getenv("DB_USERNAME")
+	password = os.Getenv("DB_PASSWORD")
+	port = os.Getenv("DB_PORT")
 
 	engine, err = xorm.NewEngine("mysql", username+":"+password+"@tcp("+hostname+":"+port+")/"+dbname)
 

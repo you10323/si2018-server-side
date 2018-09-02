@@ -27,8 +27,8 @@ run: build ## run server
 # migrations
 
 init-db: ## drop & create summer_intern_2018 database
-	mysql -u ${LOCAL_DB_USERNAME} -h ${LOCAL_DB_HOSTNAME} -e "drop database if exists ${LOCAL_DB_DBNAME};"
-	mysql -u ${LOCAL_DB_USERNAME} -h ${LOCAL_DB_HOSTNAME} -e "create database if not exists ${LOCAL_DB_DBNAME};"
+	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "drop database if exists ${DB_DBNAME};"
+	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "create database if not exists ${DB_DBNAME};"
 
 migrate: ## just wrapping goose up
 	goose up

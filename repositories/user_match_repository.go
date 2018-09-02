@@ -1,8 +1,9 @@
 package repositories
 
 import (
-	"github.com/eure/si2018-server-side/entities"
 	"github.com/go-xorm/builder"
+
+	"github.com/eure/si2018-server-side/entities"
 )
 
 type UserMatchRepository struct{}

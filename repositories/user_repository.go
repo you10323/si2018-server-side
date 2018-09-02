@@ -49,7 +49,8 @@ func (r *UserRepository) GetByUserID(userID int64) (*entities.User, error) {
 	return nil, nil
 }
 
-// limit / offset / 検索対象の性別 でselectかける
+// limit / offset / 検索対象の性別 でユーザーを取得
+// idsには取得対象に含めないUserIDを入れる (いいね/マッチ/ブロック済みなど)
 func (r *UserRepository) FindWithCondition(limit, offset int, gender string, ids []int64) ([]entities.User, error) {
 	var users []entities.User
 
