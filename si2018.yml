@@ -6,18 +6,20 @@ info:
                 ・ デーティングアプリのMVPを作るためのAPIです <br>\
                 <br>\
                 ・ `Try It Out` ボタンを押すとcurlのサンプルが表示できます <br>\
-                ・ `si-2018-XXX.eure.jp` サーバにcurlするときは、`https` でcurlしてください ( httpはhttpsにリダイレクトされます ) <br>\
-                ・ 4XX, 5XXエラーが返る際、Bodyに何もメッセージが入ってこないので、ステータスコードを見てハンドリングしてください <br>\
-                ・ ダミーデータとして `ID 1 〜 1000` に 男性ユーザ , `ID 1001 〜 2000` に 女性ユーザ が入っています。 <br>\
+                <br>\
+                ・ ダミーデータとして `ID 1 〜 1000` に 男性ユーザ , `ID 1001 〜 2000` に 女性ユーザ が入っています <br>\
                 ・ トークンは `GET /tokens/{userId}` で取得してほしいですが、簡単のため `USERTOKEN{USERID}` 形式の連番で生成しています <br>\
+                ・ 女性ユーザー `ID 1111` は 被いいねの多いユーザーで, 男性 `ID 1 〜 100` からいいねをもらっています <br>\
+                ・ 女性ユーザー `ID 1112` は マッチングの多いユーザーで, 男性 `ID 1 〜 200` とマッチしています <br>\
+                ・ 男性ユーザー `ID222` と,女性ユーザー `ID2222` はマッチとメッセージを何通かやりとりしているダミーです <br>\
                "
   version: "1.0.0"
 
-host: "si-2018-000.eure.jp"
+host: "localhost:8888"
 basePath: "/api/1.0"
 
 schemes:
-- "http" # ドキュメント上httpだがALBでhttps化されており、http は 304 redirect to https. ローカルでは普通にhttpでOK
+- "http"
 
 consumes:
 - application/json
@@ -643,7 +645,7 @@ paths:
       description: "
         (自分の) プロフィールを更新するためのエンドポイントです。 <br>\
         変更したいプロフィール項目のみをparamsに入れてPUTしてください. <br>\
-        ユーザー画像の更新は、 `POST /images` を叩いたあと、返り値をimage_uriに含めて `PUT /users/{userId}` を叩いてください. <br>\
+        ユーザー画像の更新は、別途 `POST /images/` で行ってください. <br>\
       "
       operationId: "putProfile"
       parameters:
@@ -955,6 +957,7 @@ paths:
       description: "
         指定したIDのお相手とやりとりしたメッセージ内容を取得します。 <br>\
         user_idが送信者, partner_idが受信者です. <br>\
+        latest / oldest / limit 方式での取得です. <br>\
         latest / oldest は ISO8601(RFC3339) 形式で指定してください. <br>\
       "
 
@@ -1092,10 +1095,11 @@ paths:
 
   /images:
     post:
-      summary: "プロフィール写真のアップロード"
+      summary: "プロフィール写真のアップロードおよび更新"
       description: "
-        正常にアップロードされたとき、200レスポンスとともに画像のURIが返ってきます. <br>\
-        これを PUT /users/{userId} のリクエストに含めることで,プロフィール画像の更新を行ってください. <br>\
+        base64エンコードされたjpg/pngをリクエストに含めてください. <br>\
+        正常にアップロード&更新されたとき、200レスポンスとともに画像のURIが返ってきます. <br>\
+        画像以外のプロフィール更新には `PUT /users/{userId}` を利用してください. <br>\
       "
       operationId: "postImages"
       parameters:
