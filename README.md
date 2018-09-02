@@ -3,26 +3,26 @@
 # 技術スタック
 
 - go 1.10.3
-- dep
+- dep (goの依存関係管理ツール)
 - go-swagger
-- goose
-- direnv
-- xorm
+- goose (マイグレーションツール)
+- direnv (環境変数を.envrcから読み込む)
+- xorm (ORM)
 
 # swagger
 
 dockerで用意しています.
-localhost:8081 で swagger-editor (エディタ), localhost:8082 で swagger-ui (APIドキュメント) が開きます。
+`docker-compose up -d` すると,
+localhost:8081 で swagger-editor (エディタ),
+localhost:8082 で swagger-ui (APIドキュメント) が開きます。
 
-```
-docker-compose up -d
-```
+( http://editor.swagger.io/ でも代用可能です. )
 
 # how to run the app
 
-```
-# Goがインストールされている前提です。
+Golang `1.10.3` がインストールされている前提で、以下の手順に従ってください.
 
+```
 # 必要なライブラリの取得
 
 go get -u bitbucket.org/liamstask/goose/cmd/goose
@@ -30,22 +30,18 @@ go get -u github.com/golang/dep/cmd/dep
 go get -u github.com/go-swagger/go-swagger/cmd/swagger
 go get -u github.com/direnv/direnv
 
-# 依存関係のインストール (dep ensureとか)
+# 依存関係のインストール
+# (現状, initコマンドは単にdep ensureをラップしてあるだけです)
 make init
 
-# 環境変数を.envrc (direnv) で管理している
+# 環境変数を.envrc (direnv) で管理しています.
 cp .envrc.sample .envrc
 direnv allow
 
 # ビルド
-make build (ymlからgoファイルを生成
+make build (swaggerのymlからgoファイルを生成
 
 make init (生成されたgoファイルの依存関係取り込み
-
-make build
-
-# DBの初期化 & マイグレ
-make setup-db
 
 # サーバーを立ち上げる
 make run

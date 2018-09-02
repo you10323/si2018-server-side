@@ -10,7 +10,7 @@ help:
 init: ## init ( "dep ensure" etc... )
 	dep ensure
 
-generate: generate-server generate-client ## generate everything
+generate: generate-server generate-client ## swagger generate
 
 generate-server: ## generate server by swagger
 	swagger generate server -f ./si2018.yml -a summerintern
@@ -21,19 +21,21 @@ generate-client: ## generate client by swagger
 build: generate ## build server
 	go build ./cmd/summer-intern2018-server/main.go
 
-run: build ## run server
+run: build ## build & run server on port 8888
 	./main --port=8888
+
+# server side コースでは si-2018-db-XXX.eure.jp のDBを使ってもらうため, ローカルのmigrationをさせない
 
 # migrations
 
-init-db: ## drop & create summer_intern_2018 database
-	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "drop database if exists ${DB_DBNAME};"
-	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "create database if not exists ${DB_DBNAME};"
+# init-db: ## drop & create summer_intern_2018 database
+# 	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "drop database if exists ${DB_DBNAME};"
+# 	mysql -u ${DB_USERNAME} -h ${DB_HOSTNAME} -p -e "create database if not exists ${DB_DBNAME};"
 
-migrate: ## just wrapping goose up
-	goose up
+# migrate: ## just wrapping goose up
+# 	goose up
 
-dummy: ## insert dummy data
-	go run misc/dummy/*.go
+# dummy: ## insert dummy data
+# 	go run misc/dummy/*.go
 
-setup-db: init-db migrate dummy ## recreate db and insert dummy data
+# setup-db: init-db migrate dummy ## recreate db and insert dummy data
