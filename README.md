@@ -22,53 +22,42 @@ localhost:8082 で swagger-ui (APIドキュメント) が開きます。
 
 Golang `1.10.3` がインストールされている前提で、以下の手順に従ってください.
 
-```
-# 必要なライブラリの取得
+必要なライブラリの取得を go get で行います.
 
+```
 go get -u bitbucket.org/liamstask/goose/cmd/goose
 go get -u github.com/golang/dep/cmd/dep
 go get -u github.com/go-swagger/go-swagger/cmd/swagger
 go get -u github.com/direnv/direnv
+```
 
-# 依存関係のインストール
-# (現状, initコマンドは単にdep ensureをラップしてあるだけです)
+依存関係のインストール
+
+```
 make init
+```
 
-# 環境変数を.envrc (direnv) で管理しています.
+環境変数を.envrc (direnv) で管理しています.
+.envrcの内容は各自割り振られたDB接続情報で書き換えてください.
+
+```
+# cp して .envrc の内容を書く
 cp .envrc.sample .envrc
+
+# 以下コマンドで、.envrcの置かれたディレクトリ配下で環境変数が有効になります.
 direnv allow
+```
 
-# ビルド
-make build (swaggerのymlからgoファイルを生成
+make generate すると、si2018.ymlのswaggerの定義から、goのファイルが生成されます.
+その後, 生成されたgoのファイルの依存関係取り込みのため make initを打ってください.
 
-make init (生成されたgoファイルの依存関係取り込み
+```
+make generate
+make init
+```
 
-# サーバーを立ち上げる
+サーバーを立ち上げる
+
+```
 make run
-```
-
-# dummy data
-
-misc/dummy/ 下にダミーデータ生成のスクリプトを置いてます。以下makeコマンドでDBリセット & ダミー生成を行います.
-
-```
-make setup-db
-```
-
-# migration with goose
-
-マイグレーションツールのgooseを使用しています。
-
-```
-# ./db/migrations/20180809183923_createUser.sql が作成される
-goose create createHoge sql
-
-# up
-goose up
-
-# down
-goose down
-
-# redo
-goose redo
 ```
