@@ -3,9 +3,10 @@ package repositories
 import (
 	"log"
 
-	"github.com/eure/si2018-server-side/entities"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-xorm/builder"
+
+	"github.com/eure/si2018-server-side/entities"
 )
 
 type UserMessageRepository struct{}
@@ -23,6 +24,7 @@ func (r *UserMessageRepository) Create(ent entities.UserMessage) error {
 	return nil
 }
 
+// userとpartnerがやりとりしたメッセージをlimit/latest/oldestで取得する.
 func (r *UserMessageRepository) GetMessages(userID, partnerID int64, limit int, latest, oldest *strfmt.DateTime) ([]entities.UserMessage, error) {
 	var messages []entities.UserMessage
 	var ids = []int64{userID, partnerID}
@@ -32,10 +34,10 @@ func (r *UserMessageRepository) GetMessages(userID, partnerID int64, limit int, 
 	s.Where(builder.In("user_id", ids))
 	s.And(builder.In("partner_id", ids))
 	if latest != nil {
-		s.And("created_at > ?", oldest)
+		s.And("created_at > ?", latest)
 	}
 	if oldest != nil {
-		s.And("created_at < ?", latest)
+		s.And("created_at < ?", oldest)
 	}
 	s.Limit(limit)
 	err := s.Find(&messages)
