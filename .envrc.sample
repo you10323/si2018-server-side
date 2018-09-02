@@ -3,6 +3,7 @@ export DB_DBNAME=summer_intern_2018
 export DB_USERNAME=root
 export DB_PASSWORD=
 export DB_PORT=3306
+
 export HOST_ID=000
 export ASSETS_PATH=$GOPATH/src/github.com/eure/si2018-for-frontend/assets/
 export ASSETS_BASE_URI="https://si-2018-000.eure.jp/assets/"
