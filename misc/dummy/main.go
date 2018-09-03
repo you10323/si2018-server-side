@@ -51,35 +51,82 @@ func dummyManyGotLikeUser() {
 }
 
 func dummyManyMatchUser() {
-	r := repositories.NewUserMatchRepository()
-	for i := 1; i <= 100; i++ {
-		rand.Seed(time.Now().UnixNano())
-		createdDaysAgo := rand.Intn(600)
-		minute1 := rand.Intn(1440)
-		randTime := strfmt.DateTime(time.Now().AddDate(0, 0, -createdDaysAgo).Add(-time.Duration(minute1) * time.Minute))
+	firstLikeDate := strfmt.DateTime(time.Now().AddDate(0, 0, -3))
+	responseLikeDate := strfmt.DateTime(time.Now().AddDate(0, 0, -2))
 
+	lr := repositories.NewUserLikeRepository()
+	mr := repositories.NewUserMatchRepository()
+
+	// Male 1-100 & Female 1112
+	// =====================================================
+
+	// first like
+	for i := 1; i <= 100; i++ {
+		ent := entities.UserLike{
+			UserID:    int64(i),
+			PartnerID: 1112,
+			CreatedAt: firstLikeDate,
+			UpdatedAt: firstLikeDate,
+		}
+		lr.Create(ent)
+	}
+
+	// resp like
+	for i := 1; i <= 100; i++ {
+		ent := entities.UserLike{
+			UserID:    1112,
+			PartnerID: int64(i),
+			CreatedAt: responseLikeDate,
+			UpdatedAt: responseLikeDate,
+		}
+		lr.Create(ent)
+	}
+
+	// match
+	for i := 1; i <= 100; i++ {
 		ent := entities.UserMatch{
 			UserID:    int64(i),
 			PartnerID: 1112,
-			CreatedAt: randTime,
-			UpdatedAt: randTime,
+			CreatedAt: strfmt.DateTime(time.Now().AddDate(0, 0, -1).Add(time.Duration(i) * time.Minute)), // Paginationのため分刻みでイテレート
+			UpdatedAt: strfmt.DateTime(time.Now().AddDate(0, 0, -1).Add(time.Duration(i) * time.Minute)), // Paginationのため分刻みでイテレート
 		}
-		r.Create(ent)
+		mr.Create(ent)
 	}
 
-	for i := 101; i <= 200; i++ {
-		rand.Seed(time.Now().UnixNano())
-		createdDaysAgo := rand.Intn(600)
-		minute1 := rand.Intn(1440)
-		randTime := strfmt.DateTime(time.Now().AddDate(0, 0, -createdDaysAgo).Add(-time.Duration(minute1) * time.Minute))
+	// Male 101-200 & Female 1112
+	// =====================================================
 
+	// first like
+	for i := 101; i <= 200; i++ {
+		ent := entities.UserLike{
+			UserID:    1112,
+			PartnerID: int64(i),
+			CreatedAt: firstLikeDate,
+			UpdatedAt: firstLikeDate,
+		}
+		lr.Create(ent)
+	}
+
+	// resp like
+	for i := 101; i <= 200; i++ {
+		ent := entities.UserLike{
+			UserID:    int64(i),
+			PartnerID: 1112,
+			CreatedAt: responseLikeDate,
+			UpdatedAt: responseLikeDate,
+		}
+		lr.Create(ent)
+	}
+
+	// match
+	for i := 101; i <= 200; i++ {
 		ent := entities.UserMatch{
 			UserID:    1112,
 			PartnerID: int64(i),
-			CreatedAt: randTime,
-			UpdatedAt: randTime,
+			CreatedAt: strfmt.DateTime(time.Now().AddDate(0, 0, -1).Add(time.Duration(i) * time.Minute)), // Paginationのため分刻みでイテレート
+			UpdatedAt: strfmt.DateTime(time.Now().AddDate(0, 0, -1).Add(time.Duration(i) * time.Minute)), // Paginationのため分刻みでイテレート
 		}
-		r.Create(ent)
+		mr.Create(ent)
 	}
 }
 
