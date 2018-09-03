@@ -18,6 +18,61 @@ localhost:8082 で swagger-ui (APIドキュメント) が開きます。
 
 ( http://editor.swagger.io/ でも代用可能です. )
 
+# 環境構築
+
+## Homebrew
+[macOS 用パッケージマネージャー — macOS 用パッケージマネージャー](https://brew.sh/index_ja)
+`$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+`
+
+## Git
+`$ brew install git`
+
+## Command Line Tools - Xcode
+`$ xcode-select --install`
+
+## goenv
+`$ brew install goenv`
+
+goenvインストール後`.bash_profile`に下記を記述
+
+```:.bash_profile
+if [ -d "$HOME/.goenv" ]; then
+  export GOENV_ROOT="$HOME/.goenv"
+  export PATH="$GOENV_ROOT/bin:$PATH"
+  which goenv > /dev/null && eval "$(goenv init -)"
+fi
+```
+
+## go
+
+```
+$ goenv install 1.10.3
+
+$ goenv global 1.10.3
+$ goenv rehash
+
+$ goenv versions
+
+$ go version
+go version go1.10.3 darwin/amd64
+```
+
+### GOPATHの設定
+.bash_profileに追記
+
+```:.bash_profilre
+export GOPATH="$HOME/go"
+export GO15VENDOREXPERIMENT=1
+```
+
+## direnv
+`$ brew install direnv`
+
+.bashrcに記述
+`$ echo 'eval "$(direnv hook bash)"' >> ~/.bashrc`
+
+
 # how to run the app
 
 Golang `1.10.3` がインストールされている前提で、以下の手順に従ってください.
