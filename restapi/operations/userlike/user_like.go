@@ -1,11 +1,10 @@
 package userlike
 
 import (
-	"github.com/go-openapi/runtime/middleware"
-
 	"github.com/eure/si2018-server-side/entities"
 	"github.com/eure/si2018-server-side/repositories"
 	si "github.com/eure/si2018-server-side/restapi/summerintern"
+	"github.com/go-openapi/runtime/middleware"
 )
 
 func GetLikes(p si.GetLikesParams) middleware.Responder {
@@ -15,6 +14,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 	user_t_r := repositories.NewUserTokenRepository()
 	userByToken, err := user_t_r.GetByToken(p.Token)
 	// メンターにバリデーション聞く
+	// 値が足りてない
 	UserID := userByToken.UserID
 	ids, err := user_m_r.FindAllByUserID(UserID)
 	if err != nil {
@@ -32,10 +32,20 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	castedEnt := entities.LikeUserResponses(ent)
+	var LikeUserIDs []int64
+	for _, value := range ent {
+		LikeUserIDs = append(ids, value.UserID)
+	}
+	LikeUsers, _ := user_r.FindByIDs(LikeUserIDs)
 	// UserLikeからLikeUserResponsesへのコンバート
-	sEnt := castedEnt.Build()
-	return si.NewGetLikesOK()
+	var LikeUserResponses entities.LikeUserResponses
+	for _, value := range LikeUsers {
+		LikeUserResponse := entities.LikeUserResponse{}
+		LikeUserResponse.ApplyUser(value)
+		LikeUserResponses = append(LikeUserResponses, LikeUserResponse)
+	}
+	sEnt := LikeUserResponses.Build()
+	return si.NewGetLikesOK().WithPayload(sEnt)
 }
 
 func PostLike(p si.PostLikeParams) middleware.Responder {
