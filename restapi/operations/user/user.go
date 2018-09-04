@@ -13,7 +13,7 @@ func GetUsers(p si.GetUsersParams) middleware.Responder {
 	user_l_r := repositories.NewUserLikeRepository()
 	user_t_r := repositories.NewUserTokenRepository()
 	userByToken, err := user_t_r.GetByToken(p.Token)
-	// メンターにバリデーション聞く
+	// メンターさんにバリデーション聞く
 	userID := userByToken.UserID
 	ids, err := user_l_r.FindLikeAll(userID)
 	if err != nil {
