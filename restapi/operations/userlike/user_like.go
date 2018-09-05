@@ -1,10 +1,14 @@
 package userlike
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/eure/si2018-server-side/entities"
 	"github.com/eure/si2018-server-side/repositories"
 	si "github.com/eure/si2018-server-side/restapi/summerintern"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 )
 
 func GetLikes(p si.GetLikesParams) middleware.Responder {
@@ -52,5 +56,23 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 }
 
 func PostLike(p si.PostLikeParams) middleware.Responder {
+	user_t_r := repositories.NewUserTokenRepository()
+	user_l_r := repositories.NewUserLikeRepository()
+	Token := p.Params.Token
+	userByToken, _ := user_t_r.GetByToken(Token)
+	fmt.Println(userByToken)
+	UserID := userByToken.UserID
+	fmt.Println(UserID)
+	PartnerID := p.UserID
+	fmt.Println(PartnerID)
+	InsertLike := entities.UserLike{
+		UserID:    UserID,
+		PartnerID: PartnerID,
+		CreatedAt: strfmt.DateTime(time.Now()),
+		UpdatedAt: strfmt.DateTime(time.Now()),
+	}
+	fmt.Println(InsertLike)
+	err := user_l_r.Create(InsertLike)
+	fmt.Println(err)
 	return si.NewPostLikeOK()
 }
