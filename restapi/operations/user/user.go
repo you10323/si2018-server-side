@@ -64,5 +64,33 @@ func GetProfileByUserID(p si.GetProfileByUserIDParams) middleware.Responder {
 }
 
 func PutProfile(p si.PutProfileParams) middleware.Responder {
+	user_r := repositories.NewUserRepository()
+	user := entities.User{
+		ID:             p.UserID,
+		Nickname:       p.Params.Nickname,
+		ImageURI:       p.Params.ImageURI,
+		Tweet:          p.Params.Tweet,
+		Introduction:   p.Params.Introduction,
+		ResidenceState: p.Params.ResidenceState,
+		HomeState:      p.Params.HomeState,
+		Education:      p.Params.Education,
+		Job:            p.Params.Job,
+		AnnualIncome:   p.Params.AnnualIncome,
+		Height:         p.Params.Height,
+		BodyBuild:      p.Params.BodyBuild,
+		MaritalStatus:  p.Params.MaritalStatus,
+		Child:          p.Params.Child,
+		WhenMarry:      p.Params.WhenMarry,
+		WantChild:      p.Params.WantChild,
+		Smoking:        p.Params.Smoking,
+		Drinking:       p.Params.Drinking,
+		Holiday:        p.Params.Holiday,
+		HowToMeet:      p.Params.HowToMeet,
+		CostOfDate:     p.Params.CostOfDate,
+		NthChild:       p.Params.NthChild,
+		Housework:      p.Params.Housework,
+	}
+
+	user_r.Update(&user)
 	return si.NewPutProfileOK()
 }
