@@ -13,8 +13,6 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 	user_r := repositories.NewUserRepository()
 	user_t_r := repositories.NewUserTokenRepository()
 	userByToken, err := user_t_r.GetByToken(p.Token)
-	// メンターにバリデーション聞く
-	// 値が足りてない
 	UserID := userByToken.UserID
 	ids, err := user_m_r.FindAllByUserID(UserID)
 	if err != nil {
@@ -24,7 +22,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	ent, err := user_l_r.FindGotLikeWithLimitOffset(UserID, int(p.Limit), int(p.Offset), ids)
+	likes, err := user_l_r.FindGotLikeWithLimitOffset(UserID, int(p.Limit), int(p.Offset), ids)
 	if err != nil {
 		return si.NewGetLikesInternalServerError().WithPayload(
 			&si.GetLikesInternalServerErrorBody{
@@ -33,15 +31,20 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 			})
 	}
 	var LikeUserIDs []int64
-	for _, value := range ent {
-		LikeUserIDs = append(ids, value.UserID)
+	for _, like := range likes {
+		LikeUserIDs = append(LikeUserIDs, like.UserID)
 	}
 	LikeUsers, _ := user_r.FindByIDs(LikeUserIDs)
 	// UserLikeからLikeUserResponsesへのコンバート
 	var LikeUserResponses entities.LikeUserResponses
-	for _, value := range LikeUsers {
+	for _, like := range likes {
 		LikeUserResponse := entities.LikeUserResponse{}
-		LikeUserResponse.ApplyUser(value)
+		LikeUserResponse.LikedAt = like.CreatedAt
+		for _, likeUser := range LikeUsers {
+			if likeUser.ID == like.UserID {
+				LikeUserResponse.ApplyUser(likeUser)
+			}
+		}
 		LikeUserResponses = append(LikeUserResponses, LikeUserResponse)
 	}
 	sEnt := LikeUserResponses.Build()
