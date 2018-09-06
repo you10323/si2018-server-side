@@ -1,7 +1,6 @@
 package userlike
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/eure/si2018-server-side/entities"
@@ -60,19 +59,14 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 	user_l_r := repositories.NewUserLikeRepository()
 	Token := p.Params.Token
 	userByToken, _ := user_t_r.GetByToken(Token)
-	fmt.Println(userByToken)
 	UserID := userByToken.UserID
-	fmt.Println(UserID)
 	PartnerID := p.UserID
-	fmt.Println(PartnerID)
 	InsertLike := entities.UserLike{
 		UserID:    UserID,
 		PartnerID: PartnerID,
 		CreatedAt: strfmt.DateTime(time.Now()),
 		UpdatedAt: strfmt.DateTime(time.Now()),
 	}
-	fmt.Println(InsertLike)
-	err := user_l_r.Create(InsertLike)
-	fmt.Println(err)
+	user_l_r.Create(InsertLike)
 	return si.NewPostLikeOK()
 }
