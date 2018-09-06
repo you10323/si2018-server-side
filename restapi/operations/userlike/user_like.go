@@ -16,6 +16,20 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 	user_r := repositories.NewUserRepository()
 	user_t_r := repositories.NewUserTokenRepository()
 	userByToken, err := user_t_r.GetByToken(p.Token)
+	if err != nil {
+		return si.NewGetLikesInternalServerError().WithPayload(
+			&si.GetLikesInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if userByToken == nil {
+		return si.NewGetLikesUnauthorized().WithPayload(
+			&si.GetLikesUnauthorizedBody{
+				Code:    "401",
+				Message: "Token Is Invalid",
+			})
+	}
 	UserID := userByToken.UserID
 	ids, err := user_m_r.FindAllByUserID(UserID)
 	if err != nil {
@@ -33,12 +47,26 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
+	if likes == nil {
+		return si.NewGetLikesBadRequest().WithPayload(
+			&si.GetLikesBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	var LikeUserIDs []int64
 	for _, like := range likes {
 		LikeUserIDs = append(LikeUserIDs, like.UserID)
 	}
-	LikeUsers, _ := user_r.FindByIDs(LikeUserIDs)
-	// UserLikeからLikeUserResponsesへのコンバート
+	LikeUsers, err := user_r.FindByIDs(LikeUserIDs)
+	if err != nil {
+		return si.NewGetLikesInternalServerError().WithPayload(
+			&si.GetLikesInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+
 	var LikeUserResponses entities.LikeUserResponses
 	for _, like := range likes {
 		LikeUserResponse := entities.LikeUserResponse{}
@@ -59,17 +87,69 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 	user_l_r := repositories.NewUserLikeRepository()
 	user_m_r := repositories.NewUserMatchRepository()
 	Token := p.Params.Token
-	userByToken, _ := user_t_r.GetByToken(Token)
+	userByToken, err := user_t_r.GetByToken(Token)
+	if err != nil {
+		return si.NewPostLikeInternalServerError().WithPayload(
+			&si.PostLikeInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if userByToken == nil {
+		return si.NewPostLikeUnauthorized().WithPayload(
+			&si.PostLikeUnauthorizedBody{
+				Code:    "401",
+				Message: "Token Is Invalid",
+			})
+	}
 	UserID := userByToken.UserID
 	PartnerID := p.UserID
+	if UserID == PartnerID {
+		return si.NewPostLikeBadRequest().WithPayload(
+			&si.PostLikeBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
+	//いいねする相手をいいねしていないか
+	Like, err := user_l_r.GetLikeBySenderIDReceiverID(UserID, PartnerID)
+	if err != nil {
+		return si.NewPostLikeInternalServerError().WithPayload(
+			&si.PostLikeInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if Like != nil {
+		return si.NewPostLikeBadRequest().WithPayload(
+			&si.PostLikeBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	InsertLike := entities.UserLike{
 		UserID:    UserID,
 		PartnerID: PartnerID,
 		CreatedAt: strfmt.DateTime(time.Now()),
 		UpdatedAt: strfmt.DateTime(time.Now()),
 	}
-	user_l_r.Create(InsertLike)
-	Like, _ := user_l_r.GetLikeBySenderIDReceiverID(PartnerID, UserID)
+	err = user_l_r.Create(InsertLike)
+	if err != nil {
+		return si.NewPostLikeInternalServerError().WithPayload(
+			&si.PostLikeInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	//いいねした相手にいいねされているかどうか
+	Like, err = user_l_r.GetLikeBySenderIDReceiverID(PartnerID, UserID)
+	if err != nil {
+		return si.NewPostLikeInternalServerError().WithPayload(
+			&si.PostLikeInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
 	if Like != nil {
 		InsertMatch := entities.UserMatch{
 			UserID:    PartnerID,
@@ -77,7 +157,18 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 			CreatedAt: strfmt.DateTime(time.Now()),
 			UpdatedAt: strfmt.DateTime(time.Now()),
 		}
-		user_m_r.Create(InsertMatch)
+		err = user_m_r.Create(InsertMatch)
 	}
-	return si.NewPostLikeOK()
+	if err != nil {
+		return si.NewPostLikeInternalServerError().WithPayload(
+			&si.PostLikeInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	return si.NewPostLikeOK().WithPayload(
+		&si.PostLikeOKBody{
+			Code:    "200",
+			Message: "OK",
+		})
 }

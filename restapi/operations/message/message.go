@@ -1,7 +1,6 @@
 package message
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/eure/si2018-server-side/entities"
@@ -16,31 +15,92 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 	user_mes_r := repositories.NewUserMessageRepository()
 	user_m_r := repositories.NewUserMatchRepository()
 	Token := p.Params.Token
-	userByToken, _ := user_t_r.GetByToken(Token)
+	userByToken, err := user_t_r.GetByToken(Token)
+	if err != nil {
+		return si.NewPostMessageInternalServerError().WithPayload(
+			&si.PostMessageInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if userByToken == nil {
+		return si.NewPostMessageUnauthorized().WithPayload(
+			&si.PostMessageUnauthorizedBody{
+				Code:    "401",
+				Message: "Token Is Invalid",
+			})
+	}
 	UserID := userByToken.UserID
 	PartnerID := p.UserID
-	Match, _ := user_m_r.Get(UserID, PartnerID)
+	Match, err := user_m_r.Get(UserID, PartnerID)
+	if err != nil {
+		return si.NewPostMessageInternalServerError().WithPayload(
+			&si.PostMessageInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	var InsertMessage entities.UserMessage
 	if Match != nil {
-		InsertMessage := entities.UserMessage{
+		InsertMessage = entities.UserMessage{
 			UserID:    UserID,
 			PartnerID: PartnerID,
 			Message:   p.Params.Message,
 			CreatedAt: strfmt.DateTime(time.Now()),
 			UpdatedAt: strfmt.DateTime(time.Now()),
 		}
-		user_mes_r.Create(InsertMessage)
 	}
-	return si.NewPostMessageOK()
+	err = user_mes_r.Create(InsertMessage)
+	if err != nil {
+		return si.NewPostMessageBadRequest().WithPayload(
+			&si.PostMessageBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
+
+	return si.NewPostMessageOK().WithPayload(
+		&si.PostMessageOKBody{
+			Code:    "200",
+			Message: "OK",
+		})
 }
 
 func GetMessages(p si.GetMessagesParams) middleware.Responder {
 	user_mes_r := repositories.NewUserMessageRepository()
 	user_t_r := repositories.NewUserTokenRepository()
-	userByToken, _ := user_t_r.GetByToken(p.Token)
+	userByToken, err := user_t_r.GetByToken(p.Token)
+	if err != nil {
+		return si.NewGetMessagesInternalServerError().WithPayload(
+			&si.GetMessagesInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if userByToken == nil {
+		return si.NewGetMessagesUnauthorized().WithPayload(
+			&si.GetMessagesUnauthorizedBody{
+				Code:    "401",
+				Message: "Token Is Invalid",
+			})
+	}
 	UserID := userByToken.UserID
 	PartnerID := p.UserID
-	Messages, _ := user_mes_r.GetMessages(UserID, PartnerID, int(*(p.Limit)), p.Latest, p.Oldest)
-	fmt.Println(Messages)
+	Messages, err := user_mes_r.GetMessages(UserID, PartnerID, int(*(p.Limit)), p.Latest, p.Oldest)
+	if err != nil {
+		return si.NewGetMessagesInternalServerError().WithPayload(
+			&si.GetMessagesInternalServerErrorBody{
+				Code:    "500",
+				Message: "Internal Server Error",
+			})
+	}
+	if Messages == nil {
+		return si.NewGetMessagesBadRequest().WithPayload(
+			&si.GetMessagesBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	castedMessages := entities.UserMessages(Messages)
 	sEnt := castedMessages.Build()
 	return si.NewGetMessagesOK().WithPayload(sEnt)
