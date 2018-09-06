@@ -2,14 +2,34 @@ package message
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/eure/si2018-server-side/entities"
 	"github.com/eure/si2018-server-side/repositories"
 	si "github.com/eure/si2018-server-side/restapi/summerintern"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 )
 
 func PostMessage(p si.PostMessageParams) middleware.Responder {
+	user_t_r := repositories.NewUserTokenRepository()
+	user_mes_r := repositories.NewUserMessageRepository()
+	user_m_r := repositories.NewUserMatchRepository()
+	Token := p.Params.Token
+	userByToken, _ := user_t_r.GetByToken(Token)
+	UserID := userByToken.UserID
+	PartnerID := p.UserID
+	Match, _ := user_m_r.Get(UserID, PartnerID)
+	if Match != nil {
+		InsertMessage := entities.UserMessage{
+			UserID:    UserID,
+			PartnerID: PartnerID,
+			Message:   p.Params.Message,
+			CreatedAt: strfmt.DateTime(time.Now()),
+			UpdatedAt: strfmt.DateTime(time.Now()),
+		}
+		user_mes_r.Create(InsertMessage)
+	}
 	return si.NewPostMessageOK()
 }
 

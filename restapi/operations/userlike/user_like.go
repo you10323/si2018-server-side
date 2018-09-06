@@ -57,6 +57,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 func PostLike(p si.PostLikeParams) middleware.Responder {
 	user_t_r := repositories.NewUserTokenRepository()
 	user_l_r := repositories.NewUserLikeRepository()
+	user_m_r := repositories.NewUserMatchRepository()
 	Token := p.Params.Token
 	userByToken, _ := user_t_r.GetByToken(Token)
 	UserID := userByToken.UserID
@@ -68,5 +69,15 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 		UpdatedAt: strfmt.DateTime(time.Now()),
 	}
 	user_l_r.Create(InsertLike)
+	Like, _ := user_l_r.GetLikeBySenderIDReceiverID(PartnerID, UserID)
+	if Like != nil {
+		InsertMatch := entities.UserMatch{
+			UserID:    PartnerID,
+			PartnerID: UserID,
+			CreatedAt: strfmt.DateTime(time.Now()),
+			UpdatedAt: strfmt.DateTime(time.Now()),
+		}
+		user_m_r.Create(InsertMatch)
+	}
 	return si.NewPostLikeOK()
 }
