@@ -1,13 +1,13 @@
 package user
 
 import (
-	middleware "github.com/go-openapi/runtime/middleware"
-
 	"github.com/eure/si2018-server-side/entities"
 	"github.com/eure/si2018-server-side/repositories"
 	si "github.com/eure/si2018-server-side/restapi/summerintern"
+	"github.com/go-openapi/runtime/middleware"
 )
 
+// GetUsers return NewGetUsersOK
 func GetUsers(p si.GetUsersParams) middleware.Responder {
 	UserRepository := repositories.NewUserRepository()
 	UserLikeRepository := repositories.NewUserLikeRepository()
@@ -70,6 +70,7 @@ func GetUsers(p si.GetUsersParams) middleware.Responder {
 	return si.NewGetUsersOK().WithPayload(BuildedUsers)
 }
 
+// GetProfileByUserID return NewGetProfileByUserID
 func GetProfileByUserID(p si.GetProfileByUserIDParams) middleware.Responder {
 	UserRepository := repositories.NewUserRepository()
 	UserTokenRepository := repositories.NewUserTokenRepository()
@@ -111,6 +112,7 @@ func GetProfileByUserID(p si.GetProfileByUserIDParams) middleware.Responder {
 	return si.NewGetProfileByUserIDOK().WithPayload(&BuildedUserProfile)
 }
 
+// PutProfile return NewPutProfileOK
 func PutProfile(p si.PutProfileParams) middleware.Responder {
 	UserRepository := repositories.NewUserRepository()
 	UserTokenRepository := repositories.NewUserTokenRepository()
