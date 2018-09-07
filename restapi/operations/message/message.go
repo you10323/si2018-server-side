@@ -10,6 +10,7 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
+// マッチングしている指定のユーザにメッセージ送信
 func PostMessage(p si.PostMessageParams) middleware.Responder {
 	UserTokenRepository := repositories.NewUserTokenRepository()
 	UserMessageRepository := repositories.NewUserMessageRepository()
@@ -24,6 +25,7 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
+	// GetByTokenで返り値があれば正しいトークンである
 	if UserByToken == nil {
 		return si.NewPostMessageUnauthorized().WithPayload(
 			&si.PostMessageUnauthorizedBody{
@@ -50,6 +52,7 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 				Message: "Bad Request",
 			})
 	}
+	//
 	Match, err := UserMatchRepository.Get(UserID, PartnerID)
 	if err != nil {
 		return si.NewPostMessageInternalServerError().WithPayload(
