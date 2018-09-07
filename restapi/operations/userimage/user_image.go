@@ -32,7 +32,7 @@ func PostImage(p si.PostImagesParams) middleware.Responder {
 				Message: "Token Is Invalid",
 			})
 	}
-	imgName := strconv.Itoa(int(userByToken.UserID)) + "_image"
+	imgName := strconv.Itoa(int(userByToken.UserID)) + "_image.png"
 	imgPath := assetsPath + imgName
 	file, _ := os.Create(imgPath)
 	defer file.Close()

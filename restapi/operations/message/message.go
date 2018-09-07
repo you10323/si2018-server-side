@@ -11,11 +11,12 @@ import (
 )
 
 func PostMessage(p si.PostMessageParams) middleware.Responder {
-	user_t_r := repositories.NewUserTokenRepository()
-	user_mes_r := repositories.NewUserMessageRepository()
-	user_m_r := repositories.NewUserMatchRepository()
+	UserTokenRepository := repositories.NewUserTokenRepository()
+	UserMessageRepository := repositories.NewUserMessageRepository()
+	UserMatchRepository := repositories.NewUserMatchRepository()
+
 	Token := p.Params.Token
-	userByToken, err := user_t_r.GetByToken(Token)
+	UserByToken, err := UserTokenRepository.GetByToken(Token)
 	if err != nil {
 		return si.NewPostMessageInternalServerError().WithPayload(
 			&si.PostMessageInternalServerErrorBody{
@@ -23,16 +24,19 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if userByToken == nil {
+
+	if UserByToken == nil {
 		return si.NewPostMessageUnauthorized().WithPayload(
 			&si.PostMessageUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
 			})
 	}
-	UserID := userByToken.UserID
+
+	UserID := UserByToken.UserID
 	PartnerID := p.UserID
-	Match, err := user_m_r.Get(UserID, PartnerID)
+
+	Match, err := UserMatchRepository.Get(UserID, PartnerID)
 	if err != nil {
 		return si.NewPostMessageInternalServerError().WithPayload(
 			&si.PostMessageInternalServerErrorBody{
@@ -40,6 +44,7 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
+
 	var InsertMessage entities.UserMessage
 	if Match != nil {
 		InsertMessage = entities.UserMessage{
@@ -50,7 +55,7 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 			UpdatedAt: strfmt.DateTime(time.Now()),
 		}
 	}
-	err = user_mes_r.Create(InsertMessage)
+	err = UserMessageRepository.Create(InsertMessage)
 	if err != nil {
 		return si.NewPostMessageBadRequest().WithPayload(
 			&si.PostMessageBadRequestBody{
@@ -67,9 +72,10 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 }
 
 func GetMessages(p si.GetMessagesParams) middleware.Responder {
-	user_mes_r := repositories.NewUserMessageRepository()
-	user_t_r := repositories.NewUserTokenRepository()
-	userByToken, err := user_t_r.GetByToken(p.Token)
+	UserMessageRepository := repositories.NewUserMessageRepository()
+	UserTokenRepository := repositories.NewUserTokenRepository()
+	UserByToken, err := UserTokenRepository.GetByToken(p.Token)
+
 	if err != nil {
 		return si.NewGetMessagesInternalServerError().WithPayload(
 			&si.GetMessagesInternalServerErrorBody{
@@ -77,16 +83,18 @@ func GetMessages(p si.GetMessagesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if userByToken == nil {
+	if UserByToken == nil {
 		return si.NewGetMessagesUnauthorized().WithPayload(
 			&si.GetMessagesUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
 			})
 	}
-	UserID := userByToken.UserID
+
+	UserID := UserByToken.UserID
 	PartnerID := p.UserID
-	Messages, err := user_mes_r.GetMessages(UserID, PartnerID, int(*(p.Limit)), p.Latest, p.Oldest)
+
+	Messages, err := UserMessageRepository.GetMessages(UserID, PartnerID, int(*(p.Limit)), p.Latest, p.Oldest)
 	if err != nil {
 		return si.NewGetMessagesInternalServerError().WithPayload(
 			&si.GetMessagesInternalServerErrorBody{
@@ -101,7 +109,8 @@ func GetMessages(p si.GetMessagesParams) middleware.Responder {
 				Message: "Bad Request",
 			})
 	}
-	castedMessages := entities.UserMessages(Messages)
-	sEnt := castedMessages.Build()
-	return si.NewGetMessagesOK().WithPayload(sEnt)
+
+	UserMessages := entities.UserMessages(Messages)
+	BuildedUserMessages := UserMessages.Build()
+	return si.NewGetMessagesOK().WithPayload(BuildedUserMessages)
 }
