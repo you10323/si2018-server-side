@@ -27,6 +27,13 @@ func GetMatches(p si.GetMatchesParams) middleware.Responder {
 				Message: "Token Is Invalid",
 			})
 	}
+	if p.Limit <= 0 {
+		return si.NewGetMatchesBadRequest().WithPayload(
+			&si.GetMatchesBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	UserID := UserByToken.UserID
 	Matches, err := UserMatchRepository.FindByUserIDWithLimitOffset(UserID, int(p.Limit), int(p.Offset))
 	if err != nil {
@@ -36,13 +43,16 @@ func GetMatches(p si.GetMatchesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if Matches == nil {
-		return si.NewGetMatchesBadRequest().WithPayload(
-			&si.GetMatchesBadRequestBody{
-				Code:    "400",
-				Message: "Bad Request",
-			})
-	}
+	// MatchしていないとBadになってしまう
+	/*
+		if Matches == nil {
+			return si.NewGetMatchesBadRequest().WithPayload(
+				&si.GetMatchesBadRequestBody{
+					Code:    "400",
+					Message: "Bad Request",
+				})
+		}
+	*/
 	var MatchUserIDs []int64
 	for _, Match := range Matches {
 		MatchUserIDs = append(MatchUserIDs, Match.PartnerID)

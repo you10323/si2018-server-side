@@ -30,6 +30,13 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Token Is Invalid",
 			})
 	}
+	if p.Limit <= 0 {
+		return si.NewGetLikesBadRequest().WithPayload(
+			&si.GetLikesBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	UserID := UserByToken.UserID
 	ids, err := UserMatchRepository.FindAllByUserID(UserID)
 	if err != nil {
@@ -47,13 +54,16 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if Likes == nil {
-		return si.NewGetLikesBadRequest().WithPayload(
-			&si.GetLikesBadRequestBody{
-				Code:    "400",
-				Message: "Bad Request",
-			})
-	}
+	// いいねされていないとBadになってしまう
+	/*
+		if Likes == nil {
+			return si.NewGetLikesBadRequest().WithPayload(
+				&si.GetLikesBadRequestBody{
+					Code:    "400",
+					Message: "Bad Request",
+				})
+		}
+	*/
 	var LikeUserIDs []int64
 	for _, Like := range Likes {
 		LikeUserIDs = append(LikeUserIDs, Like.UserID)

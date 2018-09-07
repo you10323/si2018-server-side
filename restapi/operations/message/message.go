@@ -81,8 +81,8 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 func GetMessages(p si.GetMessagesParams) middleware.Responder {
 	UserMessageRepository := repositories.NewUserMessageRepository()
 	UserTokenRepository := repositories.NewUserTokenRepository()
-	UserByToken, err := UserTokenRepository.GetByToken(p.Token)
 
+	UserByToken, err := UserTokenRepository.GetByToken(p.Token)
 	if err != nil {
 		return si.NewGetMessagesInternalServerError().WithPayload(
 			&si.GetMessagesInternalServerErrorBody{
@@ -98,6 +98,13 @@ func GetMessages(p si.GetMessagesParams) middleware.Responder {
 			})
 	}
 
+	if int(*(p.Limit)) <= 0 {
+		return si.NewGetMessagesBadRequest().WithPayload(
+			&si.GetMessagesBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	UserID := UserByToken.UserID
 	PartnerID := p.UserID
 
@@ -109,13 +116,16 @@ func GetMessages(p si.GetMessagesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if Messages == nil {
-		return si.NewGetMessagesBadRequest().WithPayload(
-			&si.GetMessagesBadRequestBody{
-				Code:    "400",
-				Message: "Bad Request",
-			})
-	}
+	// MessageがないとBadになってしまう
+	/*
+		if Messages == nil {
+			return si.NewGetMessagesBadRequest().WithPayload(
+				&si.GetMessagesBadRequestBody{
+					Code:    "400",
+					Message: "Bad Request",
+				})
+		}
+	*/
 
 	UserMessages := entities.UserMessages(Messages)
 	BuildedUserMessages := UserMessages.Build()
