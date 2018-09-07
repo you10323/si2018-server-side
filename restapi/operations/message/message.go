@@ -24,12 +24,19 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-
 	if UserByToken == nil {
 		return si.NewPostMessageUnauthorized().WithPayload(
 			&si.PostMessageUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
+			})
+	}
+	// 文字数バリデーション
+	if len(p.Params.Message) >= 1000 {
+		return si.NewPostMessageBadRequest().WithPayload(
+			&si.PostMessageBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
 			})
 	}
 
