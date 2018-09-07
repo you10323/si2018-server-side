@@ -8,10 +8,11 @@ import (
 )
 
 func GetMatches(p si.GetMatchesParams) middleware.Responder {
-	user_m_r := repositories.NewUserMatchRepository()
-	user_r := repositories.NewUserRepository()
-	user_t_r := repositories.NewUserTokenRepository()
-	userByToken, err := user_t_r.GetByToken(p.Token)
+	UserMatchRepository := repositories.NewUserMatchRepository()
+	UserRepository := repositories.NewUserRepository()
+	UserTokenRepository := repositories.NewUserTokenRepository()
+
+	UserByToken, err := UserTokenRepository.GetByToken(p.Token)
 	if err != nil {
 		return si.NewGetMatchesInternalServerError().WithPayload(
 			&si.GetMatchesInternalServerErrorBody{
@@ -19,15 +20,15 @@ func GetMatches(p si.GetMatchesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if userByToken == nil {
+	if UserByToken == nil {
 		return si.NewGetMatchesUnauthorized().WithPayload(
 			&si.GetMatchesUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
 			})
 	}
-	UserID := userByToken.UserID
-	Matches, err := user_m_r.FindByUserIDWithLimitOffset(UserID, int(p.Limit), int(p.Offset))
+	UserID := UserByToken.UserID
+	Matches, err := UserMatchRepository.FindByUserIDWithLimitOffset(UserID, int(p.Limit), int(p.Offset))
 	if err != nil {
 		return si.NewGetMatchesInternalServerError().WithPayload(
 			&si.GetMatchesInternalServerErrorBody{
@@ -46,7 +47,7 @@ func GetMatches(p si.GetMatchesParams) middleware.Responder {
 	for _, Match := range Matches {
 		MatchUserIDs = append(MatchUserIDs, Match.PartnerID)
 	}
-	MatchUsers, err := user_r.FindByIDs(MatchUserIDs)
+	MatchUsers, err := UserRepository.FindByIDs(MatchUserIDs)
 	if err != nil {
 		return si.NewGetMatchesInternalServerError().WithPayload(
 			&si.GetMatchesInternalServerErrorBody{

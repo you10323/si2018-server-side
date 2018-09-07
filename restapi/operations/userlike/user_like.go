@@ -11,11 +11,11 @@ import (
 )
 
 func GetLikes(p si.GetLikesParams) middleware.Responder {
-	user_m_r := repositories.NewUserMatchRepository()
-	user_l_r := repositories.NewUserLikeRepository()
-	user_r := repositories.NewUserRepository()
-	user_t_r := repositories.NewUserTokenRepository()
-	userByToken, err := user_t_r.GetByToken(p.Token)
+	UserMatchRepository := repositories.NewUserMatchRepository()
+	UserLikeRepository := repositories.NewUserLikeRepository()
+	UserRepository := repositories.NewUserRepository()
+	UserTokenRepository := repositories.NewUserTokenRepository()
+	UserByToken, err := UserTokenRepository.GetByToken(p.Token)
 	if err != nil {
 		return si.NewGetLikesInternalServerError().WithPayload(
 			&si.GetLikesInternalServerErrorBody{
@@ -23,15 +23,15 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if userByToken == nil {
+	if UserByToken == nil {
 		return si.NewGetLikesUnauthorized().WithPayload(
 			&si.GetLikesUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
 			})
 	}
-	UserID := userByToken.UserID
-	ids, err := user_m_r.FindAllByUserID(UserID)
+	UserID := UserByToken.UserID
+	ids, err := UserMatchRepository.FindAllByUserID(UserID)
 	if err != nil {
 		return si.NewGetMatchesInternalServerError().WithPayload(
 			&si.GetMatchesInternalServerErrorBody{
@@ -39,7 +39,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	likes, err := user_l_r.FindGotLikeWithLimitOffset(UserID, int(p.Limit), int(p.Offset), ids)
+	Likes, err := UserLikeRepository.FindGotLikeWithLimitOffset(UserID, int(p.Limit), int(p.Offset), ids)
 	if err != nil {
 		return si.NewGetLikesInternalServerError().WithPayload(
 			&si.GetLikesInternalServerErrorBody{
@@ -47,7 +47,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if likes == nil {
+	if Likes == nil {
 		return si.NewGetLikesBadRequest().WithPayload(
 			&si.GetLikesBadRequestBody{
 				Code:    "400",
@@ -55,10 +55,10 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 			})
 	}
 	var LikeUserIDs []int64
-	for _, like := range likes {
-		LikeUserIDs = append(LikeUserIDs, like.UserID)
+	for _, Like := range Likes {
+		LikeUserIDs = append(LikeUserIDs, Like.UserID)
 	}
-	LikeUsers, err := user_r.FindByIDs(LikeUserIDs)
+	LikeUsers, err := UserRepository.FindByIDs(LikeUserIDs)
 	if err != nil {
 		return si.NewGetLikesInternalServerError().WithPayload(
 			&si.GetLikesInternalServerErrorBody{
@@ -68,7 +68,7 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 	}
 
 	var LikeUserResponses entities.LikeUserResponses
-	for _, like := range likes {
+	for _, like := range Likes {
 		LikeUserResponse := entities.LikeUserResponse{}
 		LikeUserResponse.LikedAt = like.CreatedAt
 		for _, likeUser := range LikeUsers {
@@ -83,11 +83,11 @@ func GetLikes(p si.GetLikesParams) middleware.Responder {
 }
 
 func PostLike(p si.PostLikeParams) middleware.Responder {
-	user_t_r := repositories.NewUserTokenRepository()
-	user_l_r := repositories.NewUserLikeRepository()
-	user_m_r := repositories.NewUserMatchRepository()
+	UserTokenRepository := repositories.NewUserTokenRepository()
+	UserLikeRepository := repositories.NewUserLikeRepository()
+	UserMatchRepository := repositories.NewUserMatchRepository()
 	Token := p.Params.Token
-	userByToken, err := user_t_r.GetByToken(Token)
+	UserByToken, err := UserTokenRepository.GetByToken(Token)
 	if err != nil {
 		return si.NewPostLikeInternalServerError().WithPayload(
 			&si.PostLikeInternalServerErrorBody{
@@ -95,14 +95,14 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 				Message: "Internal Server Error",
 			})
 	}
-	if userByToken == nil {
+	if UserByToken == nil {
 		return si.NewPostLikeUnauthorized().WithPayload(
 			&si.PostLikeUnauthorizedBody{
 				Code:    "401",
 				Message: "Token Is Invalid",
 			})
 	}
-	UserID := userByToken.UserID
+	UserID := UserByToken.UserID
 	PartnerID := p.UserID
 	if PartnerID <= 0 {
 		return si.NewPostLikeBadRequest().WithPayload(
@@ -119,7 +119,7 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 			})
 	}
 	//いいねする相手をいいねしていないか
-	Like, err := user_l_r.GetLikeBySenderIDReceiverID(UserID, PartnerID)
+	Like, err := UserLikeRepository.GetLikeBySenderIDReceiverID(UserID, PartnerID)
 	if err != nil {
 		return si.NewPostLikeInternalServerError().WithPayload(
 			&si.PostLikeInternalServerErrorBody{
@@ -140,7 +140,7 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 		CreatedAt: strfmt.DateTime(time.Now()),
 		UpdatedAt: strfmt.DateTime(time.Now()),
 	}
-	err = user_l_r.Create(InsertLike)
+	err = UserLikeRepository.Create(InsertLike)
 	if err != nil {
 		return si.NewPostLikeInternalServerError().WithPayload(
 			&si.PostLikeInternalServerErrorBody{
@@ -149,7 +149,7 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 			})
 	}
 	//いいねした相手にいいねされているかどうか
-	Like, err = user_l_r.GetLikeBySenderIDReceiverID(PartnerID, UserID)
+	Like, err = UserLikeRepository.GetLikeBySenderIDReceiverID(PartnerID, UserID)
 	if err != nil {
 		return si.NewPostLikeInternalServerError().WithPayload(
 			&si.PostLikeInternalServerErrorBody{
@@ -164,7 +164,7 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 			CreatedAt: strfmt.DateTime(time.Now()),
 			UpdatedAt: strfmt.DateTime(time.Now()),
 		}
-		err = user_m_r.Create(InsertMatch)
+		err = UserMatchRepository.Create(InsertMatch)
 	}
 	if err != nil {
 		return si.NewPostLikeInternalServerError().WithPayload(
