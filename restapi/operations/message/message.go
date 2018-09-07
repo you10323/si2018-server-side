@@ -36,6 +36,13 @@ func PostMessage(p si.PostMessageParams) middleware.Responder {
 	UserID := UserByToken.UserID
 	PartnerID := p.UserID
 
+	if PartnerID <= 0 {
+		return si.NewPostMessageBadRequest().WithPayload(
+			&si.PostMessageBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	Match, err := UserMatchRepository.Get(UserID, PartnerID)
 	if err != nil {
 		return si.NewPostMessageInternalServerError().WithPayload(

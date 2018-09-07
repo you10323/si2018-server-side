@@ -104,6 +104,13 @@ func PostLike(p si.PostLikeParams) middleware.Responder {
 	}
 	UserID := userByToken.UserID
 	PartnerID := p.UserID
+	if PartnerID <= 0 {
+		return si.NewPostLikeBadRequest().WithPayload(
+			&si.PostLikeBadRequestBody{
+				Code:    "400",
+				Message: "Bad Request",
+			})
+	}
 	if UserID == PartnerID {
 		return si.NewPostLikeBadRequest().WithPayload(
 			&si.PostLikeBadRequestBody{
